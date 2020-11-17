@@ -532,7 +532,10 @@ calculateButton.addEventListener("click", e => {
       output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
       break;
     case 'aes':
-        encryptedText = encrypt(plaintext); // Provide the key as second argument
+        var aSide = new AES.Crypto(AES.generateKey());
+        var bSide = new AES.Crypto(aSide.key);
+        bSide.setCounter(aSide.getCounter());
+        encryptedText = aSide.encrypt(plaintext);
         output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
         break;
     case 'rsa':
