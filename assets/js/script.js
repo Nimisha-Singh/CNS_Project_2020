@@ -508,9 +508,530 @@ AES.Crypto = function(key) {
   };
 };
 
+/**
+ * 
+ * Utils for RSA Algorithm 
+ */
 
+//Constructor
+function SuperInteger(value) {
+  this.value = '0';
+  if (typeof value == 'object') {
+      this.value = value.toString();
+      return;
+  } else if (typeof value == 'string') {
+      for (var i = 0; i < value.length; i++) {
+          var code = value[i].charCodeAt(0);
+          if (code < 48 || code > 57) {
+              console.log('ERROR! String has a non-numeric character.');
+              return;
+          }
+      }
+      this.value = value;
+  } else if (typeof value == 'number') {
+      if (value < 0) {
+          console.log('ERROR! Negative number.');
+          return;
+      } else if (value == 0) {
+          this.value = "0";
+          return;
+      }
+      var reverseValue = '';
+      while (value > 0) {
+          reverseValue += String.fromCharCode(48 + (value % 10));
+          value = parseInt(value/10);
+      }  
+      this.value = '';
+      for (var i = reverseValue.length-1; i >= 0; i--)
+          this.value += reverseValue[i];
+  }
+  
+  return this.value;
+};
 
+//Utils - Greater
+SuperInteger.prototype.greater = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  
+  var num1 = this.toString();
+  var num2 = num2.toString();
+  
+  if (num1.length > num2.length) return true;
+  if (num2.length > num1.length) return false;
+  
+  for (var i = 0; i < num1.length; i++)
+      if (num1[i] != num2[i])
+          return num1[i] > num2[i];
+  
+  return false;
+};
 
+//Utils - Smaller 
+SuperInteger.prototype.smaller = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  
+  var num1 = this.toString();
+  var num2 = num2.toString();
+  
+  if (num1.length < num2.length) return true;
+  if (num2.length > num1.length) return false;
+  
+  for (var i = 0; i < num1.length; i++)
+      if (num1[i] != num2[i])
+          return num1[i] < num2[i];
+  return false;
+};
+
+//Utils - Equals
+SuperInteger.prototype.eq = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  
+  var num1 = this.toString();
+  var num2 = num2.toString();
+  
+  return num1.localeCompare(num2) == 0;
+};
+
+//Utils - Truncate
+SuperInteger.prototype.truncate = function(n) {
+  var l = this.toString().length;
+  while (l < n) {
+      this.value = "0" + this.toString();
+      l++;
+  }
+  return this.toString().substring(l-n, l);
+};
+
+//Utils - Remove Zeros
+SuperInteger.prototype.removeZeros = function() {
+  var result = new SuperInteger(this.toString().replace(/^0+/, ''));
+  if (result.toString() == "") result = new SuperInteger(0);
+  return result;
+};
+
+//Sum
+SuperInteger.prototype.add = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  
+  var l = Math.max(this.toString().length, num2.toString().length);
+  this.truncate(l); num2.truncate(l);
+  
+  var num1 = this.toString();
+  var num2 = num2.toString();
+  
+  var result = '';
+  var carry = 0;
+  
+  for (var i = 0; i < l; i++) {
+      var dig1 = num1.charCodeAt(l-1-i)-48;
+      var dig2 = num2.charCodeAt(l-1-i)-48;
+      result += String.fromCharCode(48 + (dig1 + dig2 + carry)%10);
+      carry = parseInt((dig1 + dig2 + carry)/10);
+  }
+  if (carry == 1)
+      result += carry;
+  result = result.split("").reverse().join("");
+  return new SuperInteger(result).removeZeros();
+};
+
+//Subtraction
+SuperInteger.prototype.minus = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  
+  var num1 = this;
+  
+  var l = Math.max(num1.toString().length, num2.toString().length);
+  num1.truncate(l); num2.truncate(l);
+  
+  var num2 = num2.toString();
+  var comp2 = "";
+  for (var i = 0; i < num2.length; i++)
+      comp2 = comp2 + (57-num2.charCodeAt(i)); // 9 - dig
+  
+  
+  num2 = new SuperInteger(comp2);
+  num2 = num2.add(1);
+  
+  var result = new SuperInteger(num1.add(num2).truncate(l));
+  return result.removeZeros();
+};
+
+//Multiplication
+SuperInteger.prototype.times = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  var num1 = this;
+  
+  num1 = num1.removeZeros();
+  num2 = num2.removeZeros();
+  
+  var zero = new SuperInteger(0);
+  var result = new SuperInteger(zero);
+  while(num2.greater(zero)) {
+      var x = new SuperInteger(num1);
+      var i = new SuperInteger(1)
+      while (i.add(i).greater(num2) == false) {
+          i = i.add(i);
+          x = x.add(x);
+      }
+      result = result.add(x);
+      num2 = num2.minus(i);
+  }
+  return result;
+};
+
+//Division
+SuperInteger.prototype.div = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  var num1 = this;
+  
+  num1 = num1.removeZeros();
+  num2 = num2.removeZeros();
+  
+  var zero = new SuperInteger(0);
+  var result = new SuperInteger(zero);
+  
+  while(num2.greater(num1) == false) {
+      var x = new SuperInteger(num2);
+      var i = new SuperInteger(1)
+      while (x.add(x).greater(num1) == false) {
+          x = x.add(x);
+          i = i.add(i);
+      }
+      result = result.add(i);
+      num1 = num1.minus(x);
+  }
+  return result;
+};
+
+//Mod
+SuperInteger.prototype.mod = function(n) {
+  return this.minus(this.div(n).times(n));
+};
+
+//Exponentiation
+SuperInteger.prototype.pow = function(num2) {
+  if (typeof num2 != 'object')
+      num2 = new SuperInteger(num2);
+  var num1 = this;
+  
+  num1 = num1.removeZeros();
+  num2 = num2.removeZeros();
+  
+  var zero = new SuperInteger(0);
+  var one = new SuperInteger(1);
+  var result = new SuperInteger(one);
+  
+  while(num2.greater(zero)) {
+      var x = new SuperInteger(num1);
+      var i = new SuperInteger(1)
+      while (i.add(i).greater(num2) == false) {
+          i = i.add(i);
+          x = x.times(x);
+      }
+      result = result.times(x);
+      num2 = num2.minus(i);
+  }
+  return result;
+};
+
+//Exponentiation with mod
+SuperInteger.prototype.powMod = function(num2, m) {
+  num1 = new SuperInteger(this).mod(m).removeZeros();
+  num2 = new SuperInteger(num2).mod(m).removeZeros();
+  
+  var zero = new SuperInteger(0);
+  var one = new SuperInteger(1);
+  var result = new SuperInteger(one);
+  
+  var values = {};
+  while(num2.greater(zero)) {
+      var x = new SuperInteger(num1);
+      var i = new SuperInteger(1)
+      while (i.add(i).greater(num2) == false) {
+          i = i.add(i);
+          if (i in values)
+              x = values[i];
+          else {
+              x = x.times(x).mod(m);
+              values[i] = x;
+          }
+      }
+      result = result.times(x).mod(m);
+      num2 = num2.minus(i);
+  }
+  return result;
+};
+
+//Greatest Common Divisor
+SuperInteger.prototype.gcd = function(num2) {
+  var num1 = new SuperInteger(this);
+  var num2 = new SuperInteger(num2);
+  var num3 = null;
+  
+  while (num2.eq(0) == false) {
+      num3 = num1.mod(num2);
+      num1 = num2;
+      num2 = num3;
+  }
+  
+  return num1;
+};
+
+//Generate a rondom number between minN and maxN (inclusive)
+SuperInteger.prototype.random = function(minN, maxN) {
+  if (typeof minN != 'object') minN = new SuperInteger(minN);
+  if (typeof maxN != 'object') maxN = new SuperInteger(maxN);
+  
+  minN = minN.removeZeros().toString();
+  maxN = maxN.removeZeros().toString();
+  
+  var result;
+  do {
+      result = "";
+      result += Math.floor(Math.random() * (maxN.charCodeAt(0)-46));
+      for (var i = 1; i < maxN.length; i++) {
+          result += Math.floor(Math.random() * 10);
+      }
+      result = new SuperInteger(result).removeZeros();
+  } while (result.greater(maxN) || result.smaller(minN));
+  return new SuperInteger(result);
+};
+
+SuperInteger.prototype.toString = function() {
+  return this.value;
+};
+
+function isPrime(candidate) {
+  if (typeof candidate != 'object') 
+      candidate = new SuperInteger(candidate);
+  
+  if (candidate.eq(2) || candidate.eq(3))
+      return true;
+  
+  if (candidate.mod(2).eq(0))
+      return false;
+  
+  //Generate small primes (3 to 7919)
+  //I could use the crive here, but there is no need, 
+  //because the interval is too short..
+  var smallPrimes = [];
+  for (var i = 3; i <= 7919; i++) {
+      var isPrime = true;
+      for (var j = 0; j <= Math.sqrt(i); j++)
+          if (i % j == 0) isPrime = false;
+      if (isPrime == true) {
+          smallPrimes.push(new SuperInteger(i));
+          //
+          console.log("Small prime: " + i);
+          //
+      }
+  }
+      
+  //Test candidate against small primes
+  for (var i = 0; i < smallPrimes.length; i++)
+      if (candidate.mod(smallPrimes[i]).eq(zero))
+          continue;
+          
+  //Generate a random number smaller than the candidate
+  var random = new SuperInteger().random(3, candidate.minus(1));
+
+  //Fermat Primality Test
+  if(random.powMod(candidate.minus(1), candidate).eq(1) == false) 
+      return false;
+
+  var miller_test = true;
+          
+  //Miller-Rabin Primality Test --> 10 times
+  for (var it = 0; it < 10; it++) {
+      //Generate another random number smaller than the candidate
+      random = new SuperInteger().random(3, candidate.minus(1));
+
+      //Calculate r and d as (candidate-1) = 2^r * d
+      var d = new SuperInteger(candidate.minus(1));
+      var a = new SuperInteger(1);
+      while (d.mod(2).eq(0)) {
+          d = d.div(2);
+          a = a.add(1);   
+      }
+  
+      //Calculate x and test if it is one or candidate-1
+      var x = random.powMod(d,candidate);
+      if (x.eq(1) || x.eq(candidate.minus(1)))
+          return true;
+
+      for (var i = 0; i < parseInt(a.minus(1).toString()); i++) {
+          x = x.pow(2).mod(candidate);
+          if (x.eq(1)) {
+              miller_test = false;
+              return true;
+          }
+          if (x.eq(candidate.minus(1)))
+              return true;
+      }
+  }    
+  return false;
+};
+
+function generatePrime(bits) {
+  var maxnumber = new SuperInteger(2).pow(bits).minus(1);
+  var candidate = new SuperInteger(2);
+  var tested = {};
+  do {
+      tested[candidate] = 1;
+      candidate = candidate.random(3, maxnumber);
+  } while (candidate in tested || isPrime(candidate) == false);
+  return candidate;
+};
+
+function RSA_modInvese(a, m) {
+  var m0 = new SuperInteger(m);
+  var x0 = new SuperInteger(0);
+  var x1 = new SuperInteger(1);
+  var c = new SuperInteger();
+  var q = new SuperInteger();
+  var t = new SuperInteger();
+  
+  var x0_signal = false;
+  var x1_signal = false;
+  var t_signal = false;
+  
+  if (m.eq(1)) return 0;
+
+  while (a.greater(1)) {
+      
+      q = a.div(m);
+      t = new SuperInteger(m);
+
+      m = a.mod(m);
+      a = new SuperInteger(t);
+      
+      t = new SuperInteger(x0);
+      t_signal = x0_signal;
+      
+      c = q.times(x0);
+      
+      if (x1_signal == false) {
+          if (x0_signal == false) {
+              if (x1.greater(c)) {
+                  x0 = x1.minus(c);
+              } else {
+                  x0_signal = true;
+                  x0 = c.minus(x1);
+              }
+          } else {
+              x0 = x1.add(c);
+              x0_signal = false;
+          } 
+      } else {
+          if (x0_signal == false) {
+              x0 = x1.add(c);
+              x0_signal = true;
+          } else {
+              if (x1.greater(c)) {
+                  x0 = x1.minus(c);
+              } else {
+                  x0_signal = false;
+                  x0 = c.minus(x1);
+              }
+          }
+      }
+      
+      x1 = new SuperInteger(t);
+      x1_signal = t_signal;
+  }
+
+  if (x1_signal)
+     x1 = m0.minus(x1);
+
+  return x1;
+}
+
+function RSA_generateKeys(bits) {
+  var p = generatePrime(bits);
+  var q = generatePrime(bits);
+  var n = p.times(q);
+  var phi = (p.minus(1)).times(q.minus(1));
+
+  var tested = {};
+  var e = new SuperInteger(0);
+  do {
+      tested[e] = 1;
+      e = e.random(3, phi);
+  } while (e in tested || e.gcd(phi).eq(1) == false);
+  
+  var d = RSA_modInvese(e, phi);
+  
+  return { e: e.removeZeros(), 
+          d: d.removeZeros(), 
+          n: n.removeZeros() };
+};
+
+function RSA_encrypt (msg, e, n) {
+  if (msg == undefined) return "";
+  var ciphertext = "";
+  for (var i = 0; i < msg.length; i++) {
+      var c = new SuperInteger(msg.charCodeAt(i)).powMod(e,n);
+      var count = new SuperInteger(n);
+      while (count.greater(0)) {
+          var ch = c.mod(90).add(32);
+          c = c.div(90);
+          count = count.div(90);
+          ciphertext += String.fromCharCode(ch.toString());
+      }
+  }
+  return ciphertext;
+};
+
+function RSA_decrypt (cipher, d, n) {
+  if (cipher == undefined) return "";
+  var msg = "";
+  var count = new SuperInteger(n);
+  sum = new SuperInteger(0);
+  for (var i = cipher.length-1; i >= 0; i--) {
+      if (count == 0) {
+          var c = sum.powMod(d,n);
+          msg += String.fromCharCode(c.toString());
+          count = new SuperInteger(n);
+          sum = new SuperInteger(0);
+      }
+      sum = sum.times(90).add(cipher.charCodeAt(i)).minus(32);
+      count = count.div(90);
+  }
+  var c = sum.powMod(d,n);
+  msg += String.fromCharCode(c.toString());
+  count = new SuperInteger(n);
+  sum = new SuperInteger(0);
+  return msg.split("").reverse().join("");;
+};
+
+/**
+ * The XOR cipher is a type of additive cipher.
+ * Each character is bitwise XORed with the key.
+ * We loop through the input string, XORing each
+ * character with the key.
+ */
+
+/**
+ * Encrypt using an XOR cipher
+ * @param {String} str - String to be encrypted
+ * @param {Number} key - key for encryption
+ * @return {String} encrypted string
+ */
+
+function XOR (str, key) {
+  let result = ''
+  for (const elem of str) {
+    result += String.fromCharCode(elem.charCodeAt(0) ^ key)
+  }
+  return result
+}
 
 /**
  * Adding all the functions on the click listener
@@ -521,29 +1042,38 @@ calculateButton.addEventListener("click", e => {
   const selectedCipher = selector.value;
   const plaintext = plaintextInput.value;
   let encryptedText = '', output = '';
-
-  switch (selectedCipher) {
-    case 'caesar':
-      encryptedText = caesarShift(plaintext, 3); // Provide the shift as second argument
-      output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
-      break;
-    case 'vignere':
-      encryptedText = vignereEncrypt(plaintext, 'nimisha'); // Provide the key as second argument
-      output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
-      break;
-    case 'aes':
-        var aSide = new AES.Crypto(AES.generateKey());
-        var bSide = new AES.Crypto(aSide.key);
-        bSide.setCounter(aSide.getCounter());
-        encryptedText = aSide.encrypt(plaintext);
+  if (plaintext.length > 0) {
+    switch (selectedCipher) {
+      case 'caesar':
+        encryptedText = caesarShift(plaintext, 3); // Provide the shift as second argument
         output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
         break;
-    case 'rsa':
-          encryptedText = vignereEncrypt(plaintext, 'nimisha'); // Provide the key as second argument
+      case 'vignere':
+        encryptedText = vignereEncrypt(plaintext, 'nimisha'); // Provide the key as second argument
+        output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
+        break;
+      case 'aes':
+          var aSide = new AES.Crypto(AES.generateKey());
+          var bSide = new AES.Crypto(aSide.key);
+          bSide.setCounter(aSide.getCounter());
+          encryptedText = aSide.encrypt(plaintext);
           output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
           break;
-    default:
-      output = `Please select a valid encryption algorithm :)`;
+      case 'rsa':
+            var encObj = RSA_generateKeys(8);
+            encryptedText = RSA_encrypt(plaintext, encObj.e, encObj.n); 
+            output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
+            break;
+      case 'xor':
+            encryptedText = XOR(plaintext, 256);
+            output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
+            break;
+      default:
+        output = `Please select a valid encryption algorithm :)`;
+    }
+  }
+  else {
+    output = 'Please enter some plaintext :-/';
   }
   outputDiv.innerText = output;
 });
