@@ -137,7 +137,8 @@ Cryptography is the study of secure communications techniques that allow only th
               <li><i class="ri-check-double-line"></i> Caeser Ciphers</li>
               <li><i class="ri-check-double-line"></i> Vignere Ciphers</li>
               <li><i class="ri-check-double-line"></i> AES Ciphers</li>
-              <li><i class="ri-check-double-line"></i> RSA  Ciphers</li>
+              <li><i class="ri-check-double-line"></i> RSA Ciphers</li>
+              <li><i class="ri-check-double-line"></i> XOR Ciphers</li>
             
             </ul>
           </div>
@@ -193,8 +194,32 @@ The table consists of the alphabets written out 26 times in different rows, each
 <li>The alphabet used at each point depends on a repeating keyword.</li></p>
              </ol>     </div>
                 </li>
+                <li>
+                  <a data-toggle="collapse" href="#accordion-list-2" class="collapsed"><span>03</span> AES (Advanced Encryption Standard) Cipher<i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i></a>
+                  <div id="accordion-list-2" class="collapse" data-parent=".accordion-list">
+                    <p>
+                   The Advanced Encryption Standard (AES), also known by its original name Rijndael, is a specification for the encryption of electronic data established by the U.S. National Institute of Standards and Technology (NIST) in 2001.<br>
+                     <br>
+                    <strong> High-level description of the algorithm</strong><br>
+                    <strong>1: KeyExpansion</strong> – round keys are derived from the cipher key using the AES key schedule. AES requires a separate 128-bit round key block for each round plus one more.<br>
+<strong>2: Initial round key addition:</strong><br>
+AddRoundKey – each byte of the state is combined with a byte of the round key using bitwise xor.<br>
+<strong>3: 9, 11 or 13 rounds:</strong><br>
+(a) SubBytes – a non-linear substitution step where each byte is replaced with another according to a lookup table.<br>
+(b) ShiftRows – a transposition step where the last three rows of the state are shifted cyclically a certain number of steps.<br>
+(c) MixColumns – a linear mixing operation which operates on the columns of the state, combining the four bytes in each column.<br>
+(d) AddRoundKey<br>
+<strong>4: Final round</strong> (making 10, 12 or 14 rounds in total):<br>
+(a) SubBytes<br>
+(b) ShiftRows<br>
+(c) AddRoundKey<br>
+                    </p>
+                  </div>
+                </li>
+                
+
                  <li>
-                  <a data-toggle="collapse" class="collapsed" href="#accordion-list-1"><span>03</span>RSA Algorithm (Rivest–Shamir–Adleman)<i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i></a>
+                  <a data-toggle="collapse" class="collapsed" href="#accordion-list-1"><span>04</span>RSA Algorithm (Rivest–Shamir–Adleman)<i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i></a>
                   <div id="accordion-list-1" class="collapse" data-parent=".accordion-list">
                     <p>
                       RSA algorithm is asymmetric cryptography algorithm. Asymmetric actually means that it works on two different keys i.e. <strong>Public Key  </strong> and <strong>Private Key </strong>. As the name describes that the Public Key is given to everyone and Private key is kept private.
@@ -212,7 +237,21 @@ The table consists of the alphabets written out 26 times in different rows, each
                       The idea of RSA is based on the fact that it is difficult to factorize a large integer. The public key consists of two numbers where one number is multiplication of two large prime numbers. And private key is also derived from the same two prime numbers. So, if somebody can factorize the large number, the private key is compromised. Therefore, encryption strength totally lies on the key size and if we double or triple the key size, the strength of encryption increases exponentially. </p>
                   </div>
                 </li>
+                  <li>
+                  <a data-toggle="collapse" href="#accordion-list-2" class="collapsed"><span>05</span>XOR Cipher<i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i></a>
+                  <div id="accordion-list-2" class="collapse" data-parent=".accordion-list">
+                    <p>
+                  This cipher is an additive cypher. It is based on the XOR operation (also known as the exclusive disjunction) in logic.
 
+<br>As a logical operation, XOR is also called modulus 2 addition. In XOR operation, the output is true when the inputs differ. In other words, XOR operation means “either one but not both or none.”.<br>
+                     <br>
+                     XOR cipher employs the XOR logical operation in order to encrypt data. First, a random key is generated.<br> Then, XOR operation is performed using the key so that an encrypted data is created. In order to decrypt, the same key should be used and XOR operation should be run again.
+<br>
+XOR operation uses the same key for both encryption and decryption. That is why it is known as a symmetric encryption.
+                    </p>
+                  </div>
+                </li>
+                
 
               </ul>
             </div>
