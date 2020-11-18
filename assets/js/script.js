@@ -1011,7 +1011,27 @@ function RSA_decrypt (cipher, d, n) {
   return msg.split("").reverse().join("");;
 };
 
+/**
+ * The XOR cipher is a type of additive cipher.
+ * Each character is bitwise XORed with the key.
+ * We loop through the input string, XORing each
+ * character with the key.
+ */
 
+/**
+ * Encrypt using an XOR cipher
+ * @param {String} str - String to be encrypted
+ * @param {Number} key - key for encryption
+ * @return {String} encrypted string
+ */
+
+function XOR (str, key) {
+  let result = ''
+  for (const elem of str) {
+    result += String.fromCharCode(elem.charCodeAt(0) ^ key)
+  }
+  return result
+}
 
 /**
  * Adding all the functions on the click listener
@@ -1022,30 +1042,38 @@ calculateButton.addEventListener("click", e => {
   const selectedCipher = selector.value;
   const plaintext = plaintextInput.value;
   let encryptedText = '', output = '';
-
-  switch (selectedCipher) {
-    case 'caesar':
-      encryptedText = caesarShift(plaintext, 3); // Provide the shift as second argument
-      output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
-      break;
-    case 'vignere':
-      encryptedText = vignereEncrypt(plaintext, 'nimisha'); // Provide the key as second argument
-      output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
-      break;
-    case 'aes':
-        var aSide = new AES.Crypto(AES.generateKey());
-        var bSide = new AES.Crypto(aSide.key);
-        bSide.setCounter(aSide.getCounter());
-        encryptedText = aSide.encrypt(plaintext);
+  if (plaintext.length > 0) {
+    switch (selectedCipher) {
+      case 'caesar':
+        encryptedText = caesarShift(plaintext, 3); // Provide the shift as second argument
         output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
         break;
-    case 'rsa':
-          var encObj = RSA_generateKeys(8);
-          encryptedText = RSA_encrypt(plaintext, encObj.e, encObj.n); 
+      case 'vignere':
+        encryptedText = vignereEncrypt(plaintext, 'nimisha'); // Provide the key as second argument
+        output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
+        break;
+      case 'aes':
+          var aSide = new AES.Crypto(AES.generateKey());
+          var bSide = new AES.Crypto(aSide.key);
+          bSide.setCounter(aSide.getCounter());
+          encryptedText = aSide.encrypt(plaintext);
           output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
           break;
-    default:
-      output = `Please select a valid encryption algorithm :)`;
+      case 'rsa':
+            var encObj = RSA_generateKeys(8);
+            encryptedText = RSA_encrypt(plaintext, encObj.e, encObj.n); 
+            output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
+            break;
+      case 'xor':
+            encryptedText = XOR(plaintext, 256);
+            output = `Plaintext : ${plaintext}, Ciphertext : ${encryptedText}`;
+            break;
+      default:
+        output = `Please select a valid encryption algorithm :)`;
+    }
+  }
+  else {
+    output = 'Please enter some plaintext :-/';
   }
   outputDiv.innerText = output;
 });
